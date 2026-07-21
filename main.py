@@ -1,6 +1,5 @@
-import os, argparse
+import os, argparse, sys
 from dotenv import load_dotenv
-import json
 
 from functions.call_functions import available_functions
 from functions.call_function import call_function
@@ -32,37 +31,43 @@ def main():
         {"role": "user","content": prompt},
         ]
 
-    response = client.chat.completions.create(
-        model=model, 
-        messages=messages, 
-        temperature=0,
-        tools=available_functions,
-    )
 
-    if response.usage is None:
-        raise RuntimeError("usage data missing")
-    p_tokens = response.usage.prompt_tokens
-    c_tokens = response.usage.completion_tokens 
+    for x in range(20):
+        response = client.chat.completions.create(
+            model=model, 
+            messages=messages, 
+            temperature=0,
+            tools=available_functions,
+        )
 
-    if args.verbose: 
-        print(f"User prompt: {prompt}")
-        print(f"Prompt tokens: {p_tokens}")
-        print(f"Response tokens: {c_tokens}")
+        if response.usage is None:
+            raise RuntimeError("usage data missing")
+        p_tokens = response.usage.prompt_tokens
+        c_tokens = response.usage.completion_tokens 
 
-    message = response.choices[0].message.content
-    
-    if response.choices[0].message.tool_calls is not None:
-        for tool_call in response.choices[0].message.tool_calls:
-            result_message = call_function(tool_call, args.verbose)
-        if result_message["content"] == "":
-            return f'Error: response content is empty'
-        if args.verbose:
-            print(f"-> {result_message['content']}")
-    else:
-        print(f"Response: {message}")
+        if args.verbose: 
+            print(f"User prompt: {prompt}")
+            print(f"Prompt tokens: {p_tokens}")
+            print(f"Response tokens: {c_tokens}")
 
-
-
+        message = response.choices[0].message.content
+        history = response.choices[0].message
+        messages.append(history)
+        
+        if response.choices[0].message.tool_calls is not None:
+            for tool_call in response.choices[0].message.tool_calls:
+                result_message = call_function(tool_call, args.verbose)
+                messages.append(result_message)
+            if result_message["content"] == "":
+                return f'Error: response content is empty'
+            if args.verbose:
+                print(f"-> {result_message['content']}")
+        else:
+            print(f"Response: {message}")
+            return
+        if x == 19:
+            print(f'Error: maximum iterations reached')
+            sys.exit(1) 
 
 if __name__ == "__main__":
     main()
