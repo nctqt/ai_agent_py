@@ -31,3 +31,28 @@ def run_python_file(working_directory: str, file_path: str, args: list[str] | No
         return f"Error: {e}"
     
     return output
+
+schema_run_python_file = {
+    "type": "function",
+    "function": {
+        "name": "run_python_file",
+        "description": "Runs a python file, relative to the working directory",
+        "parameters": {
+            "type": "object",
+            "required": ["file_path"],
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Python file to run, relative to the working directory",
+                },
+                "args": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                    },
+                    "description": "list of command line arguments"
+                }
+            },
+        },
+    },
+}

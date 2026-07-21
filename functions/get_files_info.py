@@ -17,6 +17,7 @@ class FileInfo:
 
 def get_files_info(working_directory: str, directory: str = ".") -> str:
     abs_working_dir = os.path.abspath(working_directory)
+    directory = directory.lstrip("/")
     abs_dir = os.path.join(abs_working_dir, directory)
     target_dir = os.path.normpath(abs_dir)
 
@@ -34,8 +35,24 @@ def get_files_info(working_directory: str, directory: str = ".") -> str:
     except Exception as e:
         return f"Error: {e}"
 
-
     result = ""
     for file in files_list:
         result += f"- {file.name}: file_size={file.size} bytes, is_dir={file.dir}\n"
     return result
+
+schema_get_files_info = {
+    "type": "function",
+    "function": {
+        "name": "get_files_info",
+        "description": "Lists files in a specified directory relative to the working directory, providing file size and directory status",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "directory": {
+                    "type": "string",
+                    "description": "Directory path to list files from, relative to the working directory (default is the working directory itself)",
+                },
+            },
+        },
+    },
+}

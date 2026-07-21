@@ -26,3 +26,21 @@ def get_file_content(working_directory: str, file_path: str) -> str:
         return f"Error: {e}"
     
     return content
+
+schema_get_file_content = {
+    "type": "function",
+    "function": {
+        "name": "get_file_content",
+        "description": "Reads and returns the contents of a file, relative to the working directory",
+        "parameters": {
+            "type": "object",
+            "required": ["file_path"],
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "File to read and return contents from, relative to the working directory",
+                },
+            },
+        },
+    },
+}

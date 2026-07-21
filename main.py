@@ -1,5 +1,10 @@
 import os, argparse
 from dotenv import load_dotenv
+import json
+
+from functions.call_functions import available_functions
+from functions.call_function import call_function
+import prompts
 
 load_dotenv()
 api_key = os.environ.get("OPENROUTER_API_KEY")
@@ -22,9 +27,17 @@ args = parser.parse_args()
 def main():
     model = "openrouter/free"
     prompt = args.user_prompt
-    messages = [{"role": "user","content": prompt,}]
+    messages = [
+        {"role": "system", "content": prompts.system_prompt},
+        {"role": "user","content": prompt},
+        ]
 
-    response = client.chat.completions.create(model=model, messages=messages)
+    response = client.chat.completions.create(
+        model=model, 
+        messages=messages, 
+        temperature=0,
+        tools=available_functions,
+    )
 
     if response.usage is None:
         raise RuntimeError("usage data missing")
@@ -35,7 +48,21 @@ def main():
         print(f"User prompt: {prompt}")
         print(f"Prompt tokens: {p_tokens}")
         print(f"Response tokens: {c_tokens}")
-    print(f"Response: {response.choices[0].message.content}")
+
+    message = response.choices[0].message.content
+    
+    if response.choices[0].message.tool_calls is not None:
+        for tool_call in response.choices[0].message.tool_calls:
+            result_message = call_function(tool_call, args.verbose)
+        if result_message["content"] == "":
+            return f'Error: response content is empty'
+        if args.verbose:
+            print(f"-> {result_message['content']}")
+    else:
+        print(f"Response: {message}")
+
+
+
 
 if __name__ == "__main__":
     main()
